@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VASTA</title>
+    <style>
+        /* Reset e stile base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body, html {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0a0a0a;
+            color: #e6e6e6;
+            line-height: 1.7;
+            height: 100%;
+            overflow-x: hidden;
+        }
+        
+        /* Contenitore principale */
+        #game-container {
+            max-width: 900px;
+            min-height: 100vh;
+            margin: 0 auto;
+            padding: 3rem;
+            background: linear-gradient(to bottom, #1a1a1a 0%, #0f0f0f 100%);
+            box-shadow: 0 0 30px rgba(0,0,0,0.7);
+            position: relative;
+        }
+        
+        /* Stile del titolo principale */
+        .main-title {
+            color: #ffd700;
+            font-size: 3.5rem;
+            margin-bottom: 0.5rem;
+            text-align: center;
+            letter-spacing: 0.2em;
+            text-shadow: 0 2px 10px rgba(255, 215, 0, 0.3);
+            font-weight: 300;
+        }
+        
+        .subtitle {
+            color: #999;
+            font-size: 1.1rem;
+            text-align: center;
+            margin-bottom: 3rem;
+            font-style: italic;
+        }
+        
+        /* Stile degli header */
+        h1 {
+            color: #ffd700;
+            font-size: 2.4rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            padding-bottom: 0.5rem;
+            font-weight: 300;
+        }
+        
+        h2 {
+            color: #ffed4a;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            font-weight: 400;
+        }
+        
+        /* Paragrafi */
+        p {
+            margin-bottom: 1.4rem;
+            font-size: 1.1rem;
+            text-align: justify;
+        }
+        
+        /* Contenitore dei link/scelte */
+        #choices-container {
+            margin-top: 2.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        /* Stile dei bottoni di scelta */
+        .choice-button {
+            display: inline-block;
+            padding: 1rem 1.5rem;
+            background: linear-gradient(45deg, #1e3a8a 0%, #1f2937 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.4s ease;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            cursor: pointer;
+            text-align: left;
+            font-size: 1.05rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .choice-button:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, rgba(255, 215, 0, 0.1), transparent);
+            transition: left 0.4s ease;
+        }
+        
+        .choice-button:hover {
+            background: linear-gradient(45deg, #2563eb 0%, #374151 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.15);
+            border-color: rgba(255, 215, 0, 0.4);
+        }
+        
+        .choice-button:hover:before {
+            left: 100%;
+        }
+        
+        /* Stile per il footer */
+        footer {
+            margin-top: 4rem;
+            font-size: 0.85rem;
+            text-align: center;
+            color: #666;
+            border-top: 1px solid rgba(255, 215, 0, 0.1);
+            padding-top: 1rem;
+        }
+        
+        /* Animazione di transizione */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        #passage-content {
+            animation: fadeIn 0.7s ease-in-out;
+        }
+        
+        /* Stile per finali specifici */
+        .finale-positivo {
+            color: #2ecc71;
+        }
+        
+        .finale-intermedio {
+            color: #f39c12;
+        }
+        
+        .finale-cattivo {
+            color: #e74c3c;
+        }
+        
+        /* Transizione tra passaggi */
+        .passage-transition {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        
+        .passage-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Separatore decorativo */
+        .separator {
+            width: 60px;
+            height: 2px;
+            background-color: #ffd700;
+            margin: 2rem auto;
+        }
+        
+        /* NUOVI STILI AGGIUNTI PER L'INDICATORE ETICO */
+        .ethics-score-container {
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .ethics-label {
+            font-size: 1.1rem;
+            color: #ffd700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .ethics-bar-container {
+            width: 100%;
+            height: 20px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .ethics-bar {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 1s ease;
+        }
+        
+        .ethics-value {
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            color: #999;
+        }
+        
+        /* Colori per l'indicatore etico basati sul punteggio */
+        .ethics-low {
+            background: linear-gradient(90deg, #e74c3c 0%, #c0392b 100%);
+        }
+        
+        .ethics-medium {
+            background: linear-gradient(90deg, #f39c12 0%, #d35400 100%);
+        }
+        
+        .ethics-high {
+            background: linear-gradient(90deg, #2ecc71 0%, #27ae60 100%);
+        }
+        
+        /* Stile per la schermata informativa sulla tragedia di Stava */
+        .info-screen {
+            padding: 2rem 0;
+        }
+        
+        .info-title {
+            color: #ffd700;
+            font-size: 1.8rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .info-text p {
+            margin-bottom: 1.2rem;
+            font-size: 1.1rem;
+            line-height: 1.8;
+        }
+        
+        .info-text strong {
+            color: #ffd700;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="passage-content" class="passage-transition"></div>
+        <div id="choices-container"></div>
+        <footer>
+            VASTA - Un'esperienza interattiva sulla responsabilità etica
+        </footer>
+    </div>
+    
+    <script>
+        // Definizione della storia
+        const story = {
+            passages: {
+                "Inizio": {
+                    content: `
+                        <h1 class="main-title">VASTA</h1>
+                        <p class="subtitle">Una storia già sentita</p>
+                        <div class="separator"></div>
+                        <p>Sei un ingegnere civile di trentadue anni, laureato con il massimo dei voti, hai fatto un master internazionale in gestione di progetti infrastrutturali. Negli ultimi anni hai lavorato duro per emergere in un mondo dove contano più le conoscenze dei meriti. Ma ce l'hai fatta.</p>
+                        <p>Dopo tre anni nel dipartimento tecnico di HVB, una delle più grandi multinazionali nel settore delle grandi opere idrauliche, ricevi finalmente la chiamata che aspettavi: una promozione.</p>
+                        <p>Il tuo nuovo incarico ti porterebbe dall'ufficio di Lisbona direttamente sul campo: in Guinea-Bissau, per supervisionare la costruzione di una diga colossale nei pressi del villaggio di Vasta. Un progetto definito "strategico" dall'azienda, un investimento milionario, una delle opere simbolo del piano di espansione in Africa occidentale.</p>
+                        <p>Mentre osservi il contratto sul tavolo, la mente corre indietro agli anni che hanno forgiato i tuoi sogni.</p>
+                        <p><strong>Cosa ti ha spinto, davvero, a inseguire questa carriera?</strong></p>
+                    `,
+                    choices: [
+                        { text: "Volevo superare i miei limiti e provare a me stesso di esserne capace.", target: "SceltaLimiti", etica: 0 },
+                        { text: "Ho sempre sognato di costruire opere che durassero per generazioni.", target: "SceltaOpere", etica: 0 }
+                    ]
+                },
+                "SceltaLimiti": {
+                    content: `
+                        <p>Ricordi bene i sacrifici fatti per arrivare fin qui: gli esami, le notti insonni, i momenti in cui tutto sembrava troppo grande per te.</p>
+                        <p>Non hai mai cercato solo un lavoro. Hai cercato una prova. La possibilità di dimostrare, prima di tutto a te stesso, che puoi affrontare sfide immense e uscirne più forte.</p>
+                        <p>E adesso, ti arriva una nuova prova.</p>
+                        <p>È il momento di mettere in pratica tutto ciò che hai imparato. La sfida è grande, ma la voglia di farcela è più forte che mai.</p>
+                        <p><strong>Come ti comporti?</strong></p>
+                    `,
+                    choices: [
+                        { text: "Sei molto entusiasta dell'opportunità e accetti immediatamente la proposta", target: "ArrivoAVasta", etica: 0.5 },
+                        { text: "Sorgono i primi dubbi, ma dopo un periodo di riflessione decidi di accettare", target: "ArrivoAVasta", etica: 0.5 }
+                    ]
+                },
+                "SceltaOpere": {
+                    content: `
+                        <p>Ricordi bene i sacrifici fatti per arrivare fin qui: gli esami, le notti insonni, i momenti in cui tutto sembrava troppo grande per te.</p>
+                        <p>Non hai mai cercato solo un lavoro. Hai cercato una prova. La possibilità di dimostrare, prima di tutto a te stesso, che puoi affrontare sfide immense e uscirne più forte.</p>
+                        <p>E adesso, ti arriva una nuova prova.</p>
+                        <p>È il momento di mettere in pratica tutto ciò che hai imparato. La sfida è grande, ma la voglia di farcela è più forte che mai.</p>
+                        <p><strong>Come ti comporti?</strong></p>
+                    `,
+                    choices: [
+                        { text: "Sei molto entusiasta dell'opportunità e accetti immediatamente la proposta", target: "ArrivoAVasta", etica: 0.5 },
+                        { text: "Sorgono i primi dubbi, ma dopo un periodo di riflessione decidi di accettare", target: "ArrivoAVasta", etica: 0.5 }
+                    ]
+                },
+                "ArrivoAVasta": {
+                    content: `
+                        <p>Arrivi a Vasta. La città è un miscuglio di modernità e povertà, il contrasto si nota subito. Ti sistemano in un appartamento moderno, ma la vista sulle baraccopoli ti fa capire subito che questo è solo un lato della realtà. E dentro di te comincia a farsi spazio una domanda che non puoi ignorare: "Chi paga davvero il prezzo di ciò che stiamo costruendo?"</p>
+                        <p>In ufficio, ti accorgi rapidamente che HVB è focalizzata sui risultati. Il tuo incarico è chiaro: portare avanti il progetto idraulico.</p>
+                        <p><strong>Come ti comporti?</strong></p>
+                    `,
+                    choices: [
+                        { text: "Non mi interessa dove sono, l'azienda mi ha dato un obiettivo chiaro da rispettare", target: "IncontroDonna", etica: 0 },
+                        { text: "Percepisco la disparità, ma ho altri problemi a cui pensare", target: "IncontroDonna", etica: 0.5 },
+                        { text: "Questo contrasto mi rattrista e mi piacerebbe far qualcosa per aiutare", target: "IncontroDonna", etica: 1 }
+                    ]
+                },
+                "IncontroDonna": {
+                    content: `
+                        <p>Mentre stai entrando nel cantiere, una donna ti si para davanti. Ha gli abiti impolverati e lo sguardo deciso. Ti ferma con fermezza e ti chiede di ascoltarla. È un'abitante del villaggio. Con voce tesa e un accento difficile da capire, ti racconta di come la sua comunità sia stata cacciata da quelle terre senza preavviso per far spazio alla diga.</p>
+                        <p>"Mia madre viveva su quelle terre," ti dice, fissandoti negli occhi. "Hanno distrutto le nostre case. Ci hanno mandato via senza spiegazioni. Tu pensi davvero che questo sia giusto?"</p>
+                        <p><strong>Come ti comporti?</strong></p>
+                    `,
+                    choices: [
+                        { text: "Ti fermi ad ascoltarla e vuoi capire meglio cosa sia successo", target: "ParlaResponsabile", etica: 0.5 },
+                        { text: "Eviti il confronto e vai diretto a lavorare", target: "AnalisiDiretta", etica: 0 }
+                    ]
+                },
+                "AnalisiDiretta": {
+                    content: `
+                        <p>Eviti di ascoltare la donna e ti concentri sul tuo lavoro.</p>
+                        <p>Passano alcune settimane. Il lavoro procede, ma la pressione aumenta. Un pomeriggio, mentre stai archiviando i documenti, il tuo responsabile ti chiama nel suo ufficio.</p>
+                        <p>Ti chiede di preparare un'analisi di fattibilità NEI RITAGLI DI TEMPO per una possibile miglioria dell'impianto: l'obiettivo è capire se si può aumentare la capacità della diga ampliando alcune strutture.</p>
+                        <p>Sembra un compito semplice, ma sai già che potrebbe richiedere tempo e attenzione.</p>
+                        <p><strong>Cosa scegli?</strong></p>
+                    `,
+                    choices: [
+                        { text: "Te ne occupi personalmente: Vuoi seguire tu stesso l'analisi per assicurarti della qualità e dell'accuratezza.", target: "RisultatiAnalisi", etica: 1 },
+                        { text: "Lo deleghi a un collega: Affidi il compito a un altro ingegnere, così da non appesantire troppo la tua agenda.", target: "RisultatiAnalisi", etica: 0 }
+                    ]
+                },
+                "ParlaResponsabile": {
+                    content: `
+                        <p>Quella sera, le parole della signora incontrata la mattina continuano a girarti in testa. Non riesci a scrollartele di dosso. Il giorno dopo, durante una pausa, decidi di parlarne con il tuo responsabile diretto, un uomo esperto inviato dalla sede centrale di Lisbona.</p>
+                        <p>Gli racconti dell'incontro con la donna e di ciò che ti ha detto. Lui sorride, quasi con sufficienza.</p>
+                        <p>"Ah, quella? Quella è la matta del villaggio. È da anni che si lamenta con chiunque arrivi qui. Inventano storie per screditare il progetto. Non darle retta, fidati. Noi stiamo facendo tutto in regola."</p>
+                        <p>Ti squadra, come a mettere fine alla conversazione, poi si allontana per rispondere a una telefonata.</p>
+                        <p><strong>Cosa fai?</strong></p>
+                    `,
+                    choices: [
+                        { text: "Ti fidi e non fai ulteriori domande", target: "AnalisiDiretta", etica: 0 },
+                        { text: "La storia non ti convince e decidi di andare avanti ad indagare", target: "CercaDonna", etica: 1 }
+                    ]
+                },
+                "CercaDonna": {
+                    content: `
+                        <p>Una sera, dopo il lavoro, decidi di tornare nel villaggio per cercare la donna. La ritrovi vicino e ti accoglie senza rancore. Con calma, ti racconta di nuovo la storia della sua comunità — ma questa volta, i dettagli sono tanti e troppo specifici per essere inventati: date, nomi, documenti mostrati, foto sbiadite di case distrutte e campi coltivati abbandonati.</p>
+                        <p>Parla di promesse mai mantenute e di funzionari corrotti.</p>
+                        <p>Ascoltandola, inizi a sentirti sempre più coinvolto. Quelle storie non sono più solo voci. C'è qualcosa che non torna. Senti che devi capire la verità.</p>
+                        <p><strong>Ora hai due possibilità:</strong></p>
+                    `,
+                    choices: [
+                        { text: "Chiedi ulteriori informazioni al tuo responsabile per farti chiarezza", target: "ConfrontoResponsabile", etica: 1 },
+                        { text: "Chiedi ai lavoratori locali della diga cosa è successo", target: "ParlaConLavoratori", etica: 0.5 }
+                    ]
+                },
+                "ConfrontoResponsabile": {
+                    content: `
+                        <p>Il mattino seguente, entri nel suo ufficio. L'aria è pesante e il ventilatore cigola sul soffitto. Con tono misurato, gli racconti dell'incontro avuto la sera precedente e delle informazioni che ti ha mostrato. Gli chiedi chiarimenti, vuoi capire cosa è realmente successo su quei terreni.</p>
+                        <p>Lui non ti lascia nemmeno finire. Si irrigidisce sulla sedia, incrocia le braccia e ti fissa con uno sguardo freddo.</p>
+                        <p>"Te l'ho già detto. Quella donna è una piantagrane da anni. Sono storie vecchie. Non voglio che tu perda tempo dietro a queste sciocchezze."</p>
+                        <p>Si sporge in avanti, abbassando la voce ma con tono severo.</p>
+                        <p>"Qui sei stato assunto per lavorare, non per indagare. Se continui a mettere il naso dove non devi, la prossima volta non discuteremo più: ti rispedisco a casa, chiaro?"</p>
+                        <p>Il messaggio è chiaro. Non solo non vuole parlarne, ma ti ha praticamente minacciato. Qualcosa sotto c'è. E non è pulito.</p>
+                        <p><strong>Come ti comporti?</strong></p>
+                    `,
+                    choices: [
+                        { text: "La situazione è troppo pesante. Decidi di licenziarti e denunciare quello che hai scoperto.", target: "FinalePositivo", etica: 1 },
+                        { text: "Continui con il lavoro. Cerchi di non fare troppe domande e portare a termine il progetto.", target: "AnalisiCompromessa", etica: 0 }
+                    ]
+                },
+                "ParlaConLavoratori": {
+                    content: `
+                        <p>Decidi di parlare con i lavoratori locali.</p>
+                        <p>Aspetti la fine del turno, quando i rumori della diga si affievoliscono e gli operai si raccolgono all'ombra di un vecchio capanno.</p>
+                        <p>Con discrezione, ti avvicini uno di loro, un uomo sulla quarantina con le mani consumate e lo sguardo basso. All'inizio è diffidente, ma quando gli parli della storia sentita dalla donna nei giorni passati, i suoi occhi si alzano lentamente.</p>
+                        <p>"È tutto vero," ti sussurra. "Hanno preso le terre. Hanno promesso compensazioni… ma non è arrivato niente. Chi ha protestato è sparito o è stato picchiato. Noi lavoriamo qui perché non abbiamo scelta. Ma non pensare che siamo felici."</p>
+                        <p>Altri lavoratori, sentendo la conversazione, si avvicinano e confermano.</p>
+                        <p>Le parole della signora trovano conferme, e i tuoi dubbi si moltiplicano.</p>
+                        <p><strong>Come ti comporti?</strong></p>
+                    `,
+                    choices: [
+                        { text: "Chiedi al tuo responsabile di farti chiarezza: lo affronti direttamente e gli chiedi spiegazioni più approfondite.", target: "ConfrontoResponsabile", etica: 1 },
+                        { text: "Forse è meglio non fare domande. Decidi che è meglio continuare con il lavoro e non immischiarti ulteriormente.", target: "AnalisiCompromessa", etica: 0 }
+                    ]
+                },
+                "AnalisiCompromessa": {
+                    content: `
+                        <p>Decidi di mettere da parte i tuoi dubbi e concentrarti sul lavoro. Ma dentro di te, qualcosa si è spezzato.</p>
+                        <p>Settimane dopo, il tuo responsabile ti convoca nuovamente nel suo ufficio.</p>
+                        <p>Ti chiede di preparare un'analisi di fattibilità per una possibile miglioria dell'impianto: l'obiettivo è capire se si può aumentare la capacità della diga ampliando alcune strutture.</p>
+                        <p>Il compito arriva proprio ora, mentre i tuoi dubbi etici sono al massimo.</p>
+                        <p><strong>Cosa scegli?</strong></p>
+                    `,
+                    choices: [
+                        { text: "Te ne occupi personalmente, determinato a fare un lavoro onesto.", target: "RisultatiAnalisi", etica: 1 },
+                        { text: "Lo deleghi a un collega, non volendo assumerti la responsabilità.", target: "RisultatiAnalisi", etica: 0 }
+                    ]
+                },
+                "RisultatiAnalisi": {
+                    content: `
+                        <p>Dopo giorni di lavoro, il report è pronto: emergono gravi criticità legate alla stabilità dell'impianto.</p>
+                        <p>L'aumento di capacità non è fattibile senza rischi strutturali rilevanti.</p>
+                        <p>Consegnate il report al responsabile. Dopo averlo letto, lui lo poggia lentamente sulla scrivania e ti fissa, freddo.</p>
+                        <p>"Questo documento non va bene. Se lo mandiamo così, il progetto si blocca e qui ci rimettiamo tutti. Rivedilo. Togli quelle parti. Non voglio più leggere la parola 'instabilità'. Fallo sembrare fattibile, chiaro?"</p>
+                        <p>Ti sta ordinando di modificare il report per nascondere problemi tecnici potenzialmente pericolosi.</p>
+                        <p><strong>Cosa fai?</strong></p>
+                    `,
+                    choices: [
+                        { text: "Ti rifiuti di alterare i dati e mantieni il report originale.", target: "ConsequenzeRifiuto", etica: 1 },
+                        { text: "Modifichi il report: Cancelli le parti critiche e lo fai apparire fattibile, proponendo altre soluzioni, anche se incerte e temporanee.", target: "ConsequenzeModifica", etica: 0 }
+                    ]
+                },
+                "ConsequenzeRifiuto": {
+                    content: `
+                        <p>Scegli di rifiutarti.</p>
+                        <p>Il tuo capo si irrigidisce, ti fissa freddamente e alza il tono:</p>
+                        <p>"Non mi interessa, trova una soluzione fattibile. Questo progetto deve andare avanti. Non mi presentare mai più un report così."</p>
+                        <p>Sei sotto pressione. Sai che i problemi sono seri, ma ora ti viene chiesto di aggirare un ostacolo insormontabile senza più sollevare obiezioni.</p>
+                        <p><strong>Cosa decidi di fare?</strong></p>
+                    `,
+                    choices: [
+                        { text: "Ti rifiuti, la situazione sta diventando troppo pesante. Decidi di dimetterti e denunciare l'impresa sapendo che ti metterai contro un colosso globale.", target: "FinalePositivoVero", etica: 1 },
+                        { text: "Non te la senti di dare soluzione realmente realizzabile", target: "DemansionamentoEFinale", etica: 0.5 },
+                        { text: "Decidi di trovare soluzioni alternative che darebbero stabilità comunque precaria, ma sufficiente per i mesi mancanti", target: "FinaleCattivo", etica: 0 }
+                    ]
+                },
+                "DemansionamentoEFinale": {
+                    content: `
+                        <p>Pochi giorni dopo, senza preavviso, vieni sollevato dall'incarico.</p>
+                        <p>Ti trasferiscono in un reparto meno prestigioso, lontano dai progetti importanti. I tuoi compiti diventano banali e privi di significato. Il tuo nome non appare più nelle riunioni decisionali e ti ritrovi a fare lavoro di routine per i restanti mesi, lontano dalla visibilità che avevi prima.</p>
+                    `,
+                    choices: [
+                        { text: "Avanti", target: "FinaleIntermedio", etica: 0 }
+                    ]
+                },
+                "ConsequenzeModifica": {
+                    content: `
+                        <p>Quando gli invii il documento aggiornato, lui sembra molto soddisfatto. Il suo sorriso è ampio, come se avesse appena ricevuto una grande vittoria.</p>
+                        <p>"Perfetto. Finalmente qualcosa che funziona," ti dice con tono approvante. "Questo progetto porterà milioni. Grazie a te, l'azienda crescerà a dismisura. Ti assicuro che il tuo futuro qui sarà roseo."</p>
+                        <p>Il tuo capo sembra sinceramente entusiasta dei risultati, e il tuo nome inizia a circolare nei corridoi come qualcuno che ha contribuito al successo.</p>
+                        <p>La pressione però non diminuisce. Ogni passo che fai sembra essere sempre più intriso di compromessi morali, ma il beneficio personale ti spinge a ignorarli.</p>
+                    `,
+                    choices: [
+                        { text: "Continua", target: "FinaleCattivo", etica: 0 }
+                    ]
+                },
+                "FinalePositivo": {
+                    checkEtica: true,
+                    threshold: 4,
+                    ifTrue: "FinalePositivoVero",
+                    ifFalse: "CheckFinaleIntermedio"
+                },
+                "CheckFinaleIntermedio": {
+                    checkEtica: true,
+                    threshold: 2,
+                    ifTrue: "FinaleIntermedio",
+                    ifFalse: "FinaleCattivo"
+                },
+                "FinalePositivoVero": {
+                    content: `
+                        <h2 class="finale-positivo">Un finale responsabile</h2>
+                        <p>Grazie per aver giocato. Le tue scelte non sono scontate e nessuno le ha seguite per la costruzione del bacino a Stava negli anni.</p>
+                        <p>La tua decisione di dimetterti e denunciare l'impresa, nonostante i rischi personali, ha portato all'apertura di un'inchiesta. Il progetto è stato bloccato e sottoposto a una nuova valutazione indipendente. Gli esperti hanno confermato le tue preoccupazioni: la diga non poteva essere costruita in sicurezza su quel terreno.</p>
+                        <p>La tua integrità ha salvato centinaia di vite. Il villaggio di Vasta è rimasto intatto, e la comunità locale ha potuto continuare a vivere sulle proprie terre.</p>
+                        
+                        <!-- Indicatore del punteggio etico -->
+                        <div class="ethics-score-container">
+                            <div class="ethics-label">Punteggio Etico</div>
+                            <div class="ethics-bar-container">
+                                <div class="ethics-bar ethics-high" style="width: 100%;"></div>
+                            </div>
+                            <div class="ethics-value">Eccellente</div>
+                        </div>
+                        
+                        <p>Nella realtà, pochi hanno avuto il coraggio che hai dimostrato tu. Non tutti hanno la forza di mettere in gioco la propria carriera per fare la cosa giusta, ma tu l'hai fatto.</p>
+                        
+                        <div class="separator"></div>
+                        
+                        <div class="info-screen">
+                            <h3 class="info-title">Il riferimento reale: la tragedia di Stava</h3>
+                            <div class="info-text">
+                                <p>Questa storia interattiva si ispira liberamente alla tragedia di Stava in Trentino, dove il 19 luglio 1985 il cedimento di due bacini di decantazione della miniera di Prestavel causò una colata di fango che uccise 268 persone.</p>
+                                <p>Le indagini rivelarono che i bacini erano stati costruiti su terreno inadatto, con metodi inadeguati, e che vari segnali d'allarme erano stati ignorati negli anni. Molti tecnici sapevano dei rischi, ma nessuno parlò o si oppose con sufficiente forza.</p>
+                                <p>La tragedia di Stava ci ricorda l'importanza dell'etica professionale e del coraggio di parlare quando si riconoscono situazioni potenzialmente pericolose.</p>
+                            </div>
+                        </div>
+                    `,
+                    choices: [
+                        { text: "Gioca di nuovo", target: "Inizio", reset: true },
+                        { text: "Fine", target: "Fine", etica: 0 }
+                    ]
+                },
+                "FinaleIntermedio": {
+                    content: `
+                        <h2 class="finale-intermedio">Un finale a metà</h2>
+                        <p>Sei tornato in Europa. Il tuo contratto è scaduto e non è stato rinnovato. Il progetto della diga di Vasta è andato avanti, e tu sei rimasto ai margini.</p>
+                        <p>A volte, nelle notti insonni, ti chiedi se avresti potuto fare di più. Se avresti potuto fermare quello che sentivi essere sbagliato. Ti sei tirato indietro quando si è trattato di prendere posizione fino in fondo, e questo ti ha lasciato in un limbo: né eroe, né complice.</p>
+                        <p>Hai preservato la tua carriera, ma hai perso qualcosa di più importante: la tua voce.</p>
+                        <p>Due anni dopo, leggi una notizia su un giornale: la diga di Vasta ha mostrato le prime crepe. L'evacuazione di emergenza del villaggio ha salvato molte vite, ma alcuni non ce l'hanno fatta. Il disastro che temevi si è avverato.</p>
+                        
+                        <!-- Indicatore del punteggio etico -->
+                        <div class="ethics-score-container">
+                            <div class="ethics-label">Punteggio Etico</div>
+                            <div class="ethics-bar-container">
+                                <div class="ethics-bar ethics-medium" style="width: 60%;"></div>
+                            </div>
+                            <div class="ethics-value">Intermedio</div>
+                        </div>
+                        
+                        <p>Hai fatto alcune scelte giuste, ma quando è arrivato il momento decisivo, hai scelto la strada più facile. Non tutti hanno il coraggio di rischiare tutto, ma a volte è necessario andare fino in fondo.</p>
+                        
+                        <div class="separator"></div>
+                        
+                        <div class="info-screen">
+                            <h3 class="info-title">Il riferimento reale: la tragedia di Stava</h3>
+                            <div class="info-text">
+                                <p>Questa storia interattiva si ispira liberamente alla tragedia di Stava in Trentino, dove il 19 luglio 1985 il cedimento di due bacini di decantazione della miniera di Prestavel causò una colata di fango che uccise 268 persone.</p>
+                                <p>Le indagini rivelarono che i bacini erano stati costruiti su terreno inadatto, con metodi inadeguati, e che vari segnali d'allarme erano stati ignorati negli anni. Molti tecnici sapevano dei rischi, ma nessuno parlò o si oppose con sufficiente forza.</p>
+                                <p>La tragedia di Stava ci ricorda l'importanza dell'etica professionale e del coraggio di parlare quando si riconoscono situazioni potenzialmente pericolose.</p>
+                            </div>
+                        </div>
+                    `,
+                    choices: [
+                        { text: "Gioca di nuovo", target: "Inizio", reset: true },
+                        { text: "Fine", target: "Fine", etica: 0 }
+                    ]
+                },
+                "FinaleCattivo": {
+                    content: `
+                        <h2 class="finale-cattivo">Un finale amaro</h2>
+                        <p>Sei stato promosso. L'ampliamento della diga è stato un successo... temporaneo. La tua carriera ha fatto un balzo in avanti, e hai ricevuto bonus generosi. Per un po', ti sei convinto che forse i tuoi dubbi fossero esagerati.</p>
+                        <p>Ma un anno dopo, alle 5:23 del mattino, mentre eri nel tuo nuovo ufficio a Lisbona, è arrivata la notizia: la diga di Vasta è crollata. L'acqua e i detriti hanno spazzato via il villaggio sottostante.</p>
+                        <p>Il bilancio è devastante: centinaia di morti, un ecosistema distrutto, vite annientate.</p>
+                        <p>L'inchiesta che è seguita ha portato alla scoperta delle manipolazioni dei dati nei report. Il tuo nome appare tra i responsabili. La tua carriera è finita, ma peggio ancora, vivrai per sempre con la consapevolezza di non aver impedito una tragedia che sapevi possibile.</p>
+                        
+                        <!-- Indicatore del punteggio etico -->
+                        <div class="ethics-score-container">
+                            <div class="ethics-label">Punteggio Etico</div>
+                            <div class="ethics-bar-container">
+                                <div class="ethics-bar ethics-low" style="width: 25%;"></div>
+                            </div>
+                            <div class="ethics-value">Basso</div>
+                        </div>
+                        
+                        <p>Hai scelto la strada più facile, quella del compromesso morale per il guadagno personale. Ma a quale prezzo? Le scelte etiche hanno conseguenze reali, e a volte il prezzo della comodità è troppo alto da pagare.</p>
+                        
+                        <div class="separator"></div>
+                        
+                        <div class="info-screen">
+                            <h3 class="info-title">Il riferimento reale: la tragedia di Stava</h3>
+                            <div class="info-text">
+                                <p>Questa storia interattiva si ispira liberamente alla tragedia di Stava in Trentino, dove il 19 luglio 1985 il cedimento di due bacini di decantazione della miniera di Prestavel causò una colata di fango che uccise 268 persone.</p>
+                                <p>Le indagini rivelarono che i bacini erano stati costruiti su terreno inadatto, con metodi inadeguati, e che vari segnali d'allarme erano stati ignorati negli anni. Molti tecnici sapevano dei rischi, ma nessuno parlò o si oppose con sufficiente forza.</p>
+                                <p>La tragedia di Stava ci ricorda l'importanza dell'etica professionale e del coraggio di parlare quando si riconoscono situazioni potenzialmente pericolose.</p>
+                            </div>
+                        </div>
+                    `,
+                    choices: [
+                        { text: "Gioca di nuovo", target: "Inizio", reset: true },
+                        { text: "Fine", target: "Fine", etica: 0 }
+                    ]
+                },
+                "Fine": {
+                    content: `
+                        <h2>Grazie per aver giocato</h2>
+                        <p>VASTA è un'esperienza interattiva creata per riflettere sull'importanza dell'etica e della responsabilità professionale.</p>
+                        <p>Le decisioni che prendiamo nella nostra vita professionale possono avere conseguenze reali sulle vite di altre persone. A volte, fare la cosa giusta è difficile e richiede coraggio.</p>
+                        <p>Questa storia è ispirata a eventi reali, e sebbene semplificata per scopi narrativi, cerca di trasmettere l'importanza della consapevolezza etica in campo ingegneristico e professionale.</p>
+                        
+                        <div class="separator"></div>
+                        
+                        <p>Per approfondire la storia di Stava e per non dimenticare l'importanza della responsabilità professionale, visita <a href="https://www.stava1985.it" target="_blank">www.stava1985.it</a></p>
+                    `,
+                    choices: [
+                        { text: "Gioca di nuovo", target: "Inizio", reset: true }
+                    ]
+                }
+            }
+        };
+
+        // Variabile per tracciare il punteggio etico (nascosto all'utente)
+        let etica = 0;
+        
+        // Elementi DOM principali
+        const passageContent = document.getElementById('passage-content');
+        const choicesContainer = document.getElementById('choices-container');
+        
+        // Funzione per mostrare un passaggio
+        function showPassage(passageName) {
+            // Ottieni il passaggio
+            const passage = story.passages[passageName];
+            
+            // Gestisci il controllo condizionale dell'etica
+            if (passage.checkEtica) {
+                if (etica >= passage.threshold) {
+                    showPassage(passage.ifTrue);
+                } else {
+                    showPassage(passage.ifFalse);
+                }
+                return;
+            }
+            
+            // Aggiorna il contenuto del passaggio
+            passageContent.innerHTML = passage.content;
+            
+            // Crea i pulsanti delle scelte
+            choicesContainer.innerHTML = '';
+            if (passage.choices) {
+                passage.choices.forEach(choice => {
+                    const button = document.createElement('button');
+                    button.className = 'choice-button';
+                    button.textContent = choice.text;
+                    
+                    button.addEventListener('click', () => {
+                        // Aggiungi etica se definita
+                        if (typeof choice.etica !== 'undefined') {
+                            etica += choice.etica;
+                        }
+                        
+                        // Reset etica se richiesto
+                        if (choice.reset) {
+                            etica = 0;
+                        }
+                        
+                        // Effetto di transizione
+                        passageContent.classList.remove('passage-visible');
+                        
+                        // Ritardo per l'animazione
+                        setTimeout(() => {
+                            showPassage(choice.target);
+                            passageContent.classList.add('passage-visible');
+                            // Scroll verso l'alto quando si cambia passaggio
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }, 300);
+                    });
+                    
+                    choicesContainer.appendChild(button);
+                });
+            }
+            
+            // Aggiungi classe per l'animazione
+            setTimeout(() => {
+                passageContent.classList.add('passage-visible');
+            }, 50);
+        }
+        
+        // Inizia il gioco con il primo passaggio
+        window.onload = function() {
+            passageContent.classList.remove('passage-visible');
+            showPassage("Inizio");
+        };
+    </script>
+</body>
+</html>
